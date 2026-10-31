@@ -426,9 +426,9 @@ const MODS=[
  ["parent","Espace parent (optionnel)","Application parent : notes, reçus, paiement. Sans elle, tout passe par WhatsApp / SMS.","Abonnement",false]];
 V.params=()=>head("Modules & accès","Choisissez ce que l'école utilise et qui y a accès")+
   `<div class="grid2 eq">
-   <section class="panel"><header><h2>Modules</h2><p>Tout est inclus dans l'abonnement de 15 000 F / mois</p></header><div>
+   <section class="panel"><header><h2>Modules</h2><p>Tout est inclus dans l'abonnement, quel que soit le palier</p></header><div>
    ${MODS.map(([k,t,d,p,lock])=>`<div class="mod"><div><b>${t}</b> <span class="st ${lock?"ok":"n"}">${lock?"Toujours actif":"Inclus"}</span><small>${d}</small></div><label class="switch"><input type="checkbox" data-mod="${k}" ${S.mod[k]?"checked":""} ${lock?"disabled":""} aria-label="${t}"><span></span></label></div>`).join("")}
-   </div><div class="note-box">Abonnement unique : <b class="num">15 000 F / mois</b>, tous les modules inclus. Activez seulement ce que l'école utilise : le prix ne change pas.</div></section>
+   </div><div class="note-box">Abonnement selon l'effectif, tous les modules inclus : <b class="num">15 000 F / mois</b> jusqu'à 200 élèves, <b class="num">25 000 F</b> de 201 à 500 élèves, <b class="num">40 000 F</b> au-delà de 500. Activez seulement ce que l'école utilise : le prix ne change pas.</div></section>
    <section class="panel"><header><h2>Organisation pédagogique</h2></header><p>Chaque professeur enseigne une seule matière. Vous l'affectez aux classes et fixez le coefficient de chaque matière, classe par classe.</p><div class="row"><button class="btn pri" data-go="aff">Ouvrir les affectations</button></div></section>
   </div>
   <section class="panel"><header><h2>Accès et liens personnels</h2><p>Chaque personne reçoit son lien par WhatsApp et ne voit que ce qui la concerne</p></header>
