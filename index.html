@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jàng Gestion Scolaire</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: application de gestion — barre latérale (rôle + navigation) + zone de travail ; sur téléphone, onglets défilants en haut */
+:root{
+  --bg:#F3F5F4; --surface:#FFFFFF; --sunk:#E8ECEA; --line:#D5DCD9;
+  --fg:#15211F; --muted:#5B6B67;
+  --ink:#0E4F4A; --ink-fg:#FFFFFF; --chalk:#C98A00; --chalk-soft:#FBF0D6;
+  --ok:#1E7A46; --ok-soft:#DFF3E6; --warn:#A35C00; --warn-soft:#FCEBD3; --bad:#B3261E; --bad-soft:#FBE1DE;
+  --wa:#DCF8C6; --wa-fg:#111B21; --wa-bg:#EFE7DD;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Consolas, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1615; --surface:#172220; --sunk:#1F2C2A; --line:#2D3D3A;
+  --fg:#E6EEEC; --muted:#9AAEA9;
+  --ink:#5FC4B8; --ink-fg:#06201D; --chalk:#F0B93A; --chalk-soft:#3A2E10;
+  --ok:#5BD18C; --ok-soft:#173826; --warn:#F2A54A; --warn-soft:#3B2810; --bad:#FF8A80; --bad-soft:#40201D;
+  --wa:#005C4B; --wa-fg:#E9EDEF; --wa-bg:#0B141A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1615; --surface:#172220; --sunk:#1F2C2A; --line:#2D3D3A;
+  --fg:#E6EEEC; --muted:#9AAEA9;
+  --ink:#5FC4B8; --ink-fg:#06201D; --chalk:#F0B93A; --chalk-soft:#3A2E10;
+  --ok:#5BD18C; --ok-soft:#173826; --warn:#F2A54A; --warn-soft:#3B2810; --bad:#FF8A80; --bad-soft:#40201D;
+  --wa:#005C4B; --wa-fg:#E9EDEF; --wa-bg:#0B141A; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:1.6rem} h2{font-size:1.2rem} h3{font-size:1rem}
+p{margin:0}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--chalk);outline-offset:2px}
+.app{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100%}
+.side{background:var(--ink);color:var(--ink-fg);padding:20px 12px;display:flex;flex-direction:column;gap:16px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{display:flex;align-items:baseline;gap:8px;padding:0 8px}
+.brand b{font-family:var(--display);font-size:1.7rem;letter-spacing:-.02em}
+.brand small{opacity:.75;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase}
+.role{display:flex;flex-direction:column;gap:4px;padding:0 8px}
+.role label{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;opacity:.8}
+.role select{background:color-mix(in srgb,var(--ink-fg) 14%,transparent);color:var(--ink-fg);border:1px solid color-mix(in srgb,var(--ink-fg) 30%,transparent);border-radius:8px;padding:7px 8px}
+.role select option{color:#15211F;background:#fff}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{all:unset;cursor:pointer;padding:9px 12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.95rem}
+.nav button:hover{background:color-mix(in srgb,var(--ink-fg) 12%,transparent)}
+.nav button[aria-current="page"]{background:var(--ink-fg);color:var(--ink);font-weight:700}
+.nav button:focus-visible{outline:3px solid var(--chalk)}
+.nav .pill{font-size:.72rem;padding:1px 7px;border-radius:99px;background:var(--chalk);color:#2A1D00;font-weight:700}
+.side .foot{margin-top:auto;font-size:.78rem;opacity:.8;padding:0 8px}
+main{padding-block:22px 60px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));min-width:0;display:flex;flex-direction:column;gap:20px;max-width:1240px}
+.top{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:flex-end}
+.top p{margin-top:2px;color:var(--muted)}
+.tag{display:inline-block;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:var(--chalk-soft);color:var(--warn);font-weight:700}
+.free{display:inline-block;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:var(--ok-soft);color:var(--ok);font-weight:700}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{cursor:pointer;border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:8px;font-weight:700;font-size:.9rem}
+.btn:hover{border-color:var(--ink)}
+.btn.pri{background:var(--ink);color:var(--ink-fg);border-color:var(--ink)}
+.btn.wa{background:#1FA855;color:#fff;border-color:#1FA855}
+.btn.sm{padding:4px 10px;font-size:.82rem}
+.btn:disabled{opacity:.5;cursor:default}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.kpi span{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.kpi b{font-size:1.45rem}
+.kpi em{font-style:normal;font-size:.82rem;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.grid2.eq{grid-template-columns:repeat(2,minmax(0,1fr))}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.panel header p{color:var(--muted);font-size:.85rem}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th{text-align:left;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 8px;border-bottom:1px solid var(--sunk);vertical-align:middle}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--sunk)}
+tr.coef td{background:var(--chalk-soft);font-size:.82rem}
+td.r,th.r{text-align:right}
+tfoot td{font-weight:700;border-top:2px solid var(--line)}
+.st{display:inline-block;font-size:.76rem;font-weight:700;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.st.ok{background:var(--ok-soft);color:var(--ok)} .st.warn{background:var(--warn-soft);color:var(--warn)} .st.bad{background:var(--bad-soft);color:var(--bad)} .st.n{background:var(--sunk);color:var(--muted)}
+.list{display:flex;flex-direction:column}
+.li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--sunk)}
+.li:last-child{border-bottom:0}
+.li small{display:block;color:var(--muted);font-size:.8rem}
+.ai{border:1px dashed var(--chalk);background:var(--chalk-soft)}
+.ai header h3::before{content:"IA ";font-family:var(--mono);font-size:.75rem;background:var(--chalk);color:#2A1D00;padding:1px 5px;border-radius:4px;margin-right:6px;vertical-align:2px}
+.note-box{background:var(--sunk);border-radius:var(--r);padding:12px 14px;font-size:.88rem;color:var(--muted)}
+.bars{display:flex;align-items:flex-end;gap:3px;height:150px;border-bottom:1px solid var(--line);padding-top:8px}
+.bars div{flex:1;background:var(--ink);border-radius:3px 3px 0 0;min-height:2px;opacity:.85}
+.bars div:hover{opacity:1}
+.bars div.today{background:var(--chalk)}
+.axis{display:flex;justify-content:space-between;font-size:.74rem;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:4px;font-size:.85rem;min-width:0}
+.field label,.lbl{color:var(--muted);font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
+input[type=text],input[type=search],input[type=number],select,textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;min-width:0}
+textarea{resize:vertical;min-height:90px;width:100%}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{all:unset;cursor:pointer;padding:5px 10px;font-size:.82rem;font-weight:700}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--ink-fg)}
+.seg button:focus-visible{outline:3px solid var(--chalk)}
+.notes input{width:72px;text-align:right;padding:5px 6px;font-family:var(--mono)}
+.notes input:disabled{background:var(--sunk);color:var(--muted);border-color:transparent}
+.coefin{width:56px;text-align:right;padding:4px 6px;font-family:var(--mono)}
+.switch{position:relative;width:44px;height:24px;flex:none}
+.switch input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.switch span{position:absolute;inset:0;background:var(--line);border-radius:99px;transition:background .15s}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked+span{background:var(--ok)}
+.switch input:checked+span::after{transform:translateX(20px)}
+.switch input:disabled+span{opacity:.6}
+.switch input:focus-visible+span{outline:3px solid var(--chalk);outline-offset:2px}
+.mod{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--sunk)}
+.mod:last-child{border-bottom:0}
+.mod small{display:block;color:var(--muted);font-size:.82rem}
+.link{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.link code{font-family:var(--mono);font-size:.82rem;background:var(--sunk);padding:3px 8px;border-radius:6px;user-select:all;word-break:break-all}
+.wa-wrap{background:var(--wa-bg);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:8px}
+.bubble{background:var(--wa);color:var(--wa-fg);padding:8px 10px 6px;border-radius:8px 0 8px 8px;max-width:92%;align-self:flex-end;font-size:.88rem;white-space:pre-wrap;box-shadow:0 1px 1px rgba(0,0,0,.12)}
+.bubble .t{display:block;text-align:right;font-size:.68rem;opacity:.7;margin-top:2px}
+.bubble a{color:inherit;text-decoration:underline}
+.overlay{position:fixed;inset:0;background:rgba(10,20,18,.5);display:flex;justify-content:flex-end;z-index:30}
+.overlay.center{justify-content:center;align-items:center;padding:16px}
+.drawer{background:var(--bg);width:min(560px,100%);height:100%;overflow-y:auto;padding:20px max(20px,env(safe-area-inset-right,0px)) 40px 20px;display:flex;flex-direction:column;gap:14px}
+.modal{background:var(--bg);width:min(640px,100%);max-height:92vh;overflow-y:auto;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.x{all:unset;cursor:pointer;font-size:1.4rem;line-height:1;padding:4px 8px;border-radius:6px}
+.x:focus-visible{outline:3px solid var(--chalk)}
+.methods{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.methods button{cursor:pointer;border:2px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 6px;font-weight:700;font-size:.85rem}
+.methods button[aria-pressed="true"]{border-color:var(--ink);background:var(--sunk)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:700;z-index:50;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.phone{width:min(360px,100%);margin:0 auto;border:10px solid var(--fg);border-radius:34px;background:var(--surface);overflow:hidden;display:flex;flex-direction:column;min-height:600px}
+.phone .ph{background:var(--ink);color:var(--ink-fg);padding:16px}
+.phone .ph small{opacity:.8}
+.phone .pb{padding:14px;display:flex;flex-direction:column;gap:12px}
+.due{background:var(--chalk-soft);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.due b{font-size:1.6rem}
+.bul{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.bul .hd{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-bottom:2px solid var(--fg);padding-bottom:8px}
+.muted{color:var(--muted)}
+.empty{color:var(--muted);font-size:.9rem;padding:8px 0}
+@media (max-width:980px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2,.grid2.eq{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:sticky;top:env(safe-area-inset-top,0px);height:auto;padding:10px 0 8px;gap:8px;z-index:20;overflow:visible}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--ink)}
+  .brand{padding-left:max(16px,env(safe-area-inset-left,0px))}
+  .role{flex-direction:row;align-items:center;gap:8px;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+  .role select{flex:1}
+  .nav{flex-direction:row;overflow-x:auto;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));scrollbar-width:none}
+  .nav button{white-space:nowrap;padding:7px 11px}
+  .side .foot{display:none}
+  main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .methods{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (prefers-reduced-motion:no-preference){.bars div{transition:height .3s}.toast{animation:up .2s ease-out}@keyframes up{from{transform:translate(-50%,10px);opacity:0}}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><b>Jàng</b><small>gestion scolaire</small></div>
+    <div class="role"><label for="role">Connecté en tant que</label><select id="role"></select></div>
+    <nav class="nav" id="nav" aria-label="Navigation"></nav>
+    <div class="foot">Prototype · données d'exemple<br>Rien n'est réellement envoyé ni payé.</div>
+  </aside>
+  <main id="main"></main>
+</div>
+<div id="layer"></div>
+
+<script>
+// ---------- Données d'exemple ----------
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const R=rng(221);
+const pick=a=>a[Math.floor(R()*a.length)];
+const SCHOOL="Groupe Scolaire Les Bâtisseurs";
+const TODAY=31; // 31 octobre 2026
+const MOIS=["Octobre","Novembre","Décembre","Janvier","Février","Mars","Avril","Mai","Juin"];
+const CLASSES=[{id:"CI",fee:20000,ins:25000},{id:"CP",fee:20000,ins:25000},{id:"CE1",fee:22500,ins:25000},{id:"CE2",fee:22500,ins:25000},{id:"CM1",fee:25000,ins:30000},{id:"CM2",fee:25000,ins:30000},{id:"6e",fee:35000,ins:40000},{id:"5e",fee:35000,ins:40000}];
+const MATIERES=["Français","Mathématiques","Sciences","Histoire-Géo","Anglais","Éduc. religieuse"];
+const PF=["Awa","Fatou","Mariama","Aminata","Khady","Ndeye","Coumba","Adja","Seynabou","Bineta","Astou","Rokhaya"];
+const PM=["Moussa","Ibrahima","Cheikh","Mamadou","Ousmane","Abdoulaye","Modou","Pape","Serigne","Babacar","Alioune","Lamine"];
+const NOMS=["Ndiaye","Diop","Fall","Sow","Sarr","Gueye","Ba","Faye","Diallo","Cissé","Mbaye","Thiam","Seck","Kane","Diouf","Ndour","Camara","Sy"];
+const METH=["Wave","Orange Money","Espèces","Free Money"];
+const fmt=n=>Math.round(n).toLocaleString("fr-FR")+" F";
+const dec=(n,d=2)=>n.toFixed(d).replace(".",",");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let refN=1040;
+const S={students:[],pays:[],teachers:[],msgs:[],depenses:[],view:"home",role:"dir",prof:3,cls:"CM2",appel:{},parentId:null,lang:"fr",caisseClose:false,
+  mod:{bulletins:true,paiements:true,paie:true,compta:true,parent:true},
+  coef:{},aff:{}};
+const COEF0={pri:{"Français":4,"Mathématiques":4,"Sciences":2,"Histoire-Géo":2,"Anglais":1,"Éduc. religieuse":1},col:{"Français":3,"Mathématiques":4,"Sciences":3,"Histoire-Géo":2,"Anglais":2,"Éduc. religieuse":1}};
+CLASSES.forEach((c,ci)=>{for(let k=0;k<6;k++){
+  const f=R()<.5, nom=pick(NOMS), id="E"+(100+ci*6+k);
+  const items=[{label:"Inscription",montant:c.ins,due:true,paid:R()<.92}];
+  MOIS.forEach((m,i)=>items.push({label:m,montant:c.fee,due:i===0,paid:i===0?R()<.66:false}));
+  const st={id,prenom:f?pick(PF):pick(PM),nom,sexe:f?"F":"M",classe:c.id,
+    tuteur:{nom:(R()<.6?pick(PM):pick(PF))+" "+nom,tel:"7"+pick(["7","8","6","0"])+" "+(100+Math.floor(R()*899))+" "+(10+Math.floor(R()*89))+" "+(10+Math.floor(R()*89)),appli:R()<.6},
+    items,abs:Math.floor(R()*R()*7),notes:{}};
+  const lvl=7+R()*8;
+  MATIERES.forEach(m=>{const n=()=>Math.max(0,Math.min(20,Math.round((lvl+(R()-.5)*7)*2)/2));st.notes[m]={d:[n(),n(),R()<.5?n():null],c:n()}});
+  S.students.push(st);
+  items.forEach(it=>{if(it.paid){const d=it.label==="Inscription"?Math.ceil(R()*12):Math.ceil(R()*TODAY);
+    S.pays.push({day:d,mois:it.label==="Inscription"&&R()<.4?"sept":"oct",sid:id,item:it.label,montant:it.montant,meth:R()<.55?"Wave":R()<.6?"Orange Money":R()<.75?"Espèces":"Free Money",ref:"RC-"+(refN++)})}});
+}});
+S.pays.sort((a,b)=>(a.mois===b.mois?b.day-a.day:a.mois==="oct"?-1:1));
+const ALLC=CLASSES.map(c=>c.id);
+const PRI=["CI","CP","CE1","CE2","CM1","CM2"],COL=["6e","5e"];
+S.teachers=[
+ ["Mme Aïssatou Diallo","Permanent",160000,"Français",PRI,"k7Qm2"],
+ ["M. Babacar Sarr","Permanent",160000,"Mathématiques",PRI,"p3Xw9"],
+ ["Mme Ndeye Fall","Permanent",150000,"Sciences",ALLC,"z8Lr4"],
+ ["M. Ousmane Kane","Permanent",150000,"Histoire-Géo",ALLC,"a5Tn6"],
+ ["M. Lamine Thiam","Vacataire",{h:32,t:3000},"Mathématiques",COL,"m2Vb8"],
+ ["Mme Fatou Seck","Vacataire",{h:28,t:3000},"Français",COL,"f9Kd1"],
+ ["M. Kevin Mendy","Vacataire",{h:24,t:2500},"Anglais",ALLC,"e4Hs7"],
+ ["Oustaz Modou Mbaye","Vacataire",{h:20,t:2500},"Éduc. religieuse",ALLC,"r6Jc3"]]
+ .map(([nom,type,s,mat,classes,tok],i)=>{ALLC.forEach(c=>{S.aff[c]??={};if(classes.includes(c))S.aff[c][mat]=i});
+   return{nom,type,mat,tok,montant:typeof s==="number"?s:s.h*s.t,detail:typeof s==="number"?"Salaire mensuel":s.h+" h × "+fmt(s.t),paid:false}});
+ALLC.forEach(c=>S.coef[c]={...COEF0[(c==="6e"||c==="5e")?"col":"pri"]});
+S.msgs=[{date:"28 oct.",to:"Toute l'école",n:48,lus:44,txt:"Réunion des parents samedi 7 novembre à 10 h dans la cour de l'école."},{date:"15 oct.",to:"CM2",n:6,lus:6,txt:"Les élèves de CM2 doivent apporter leur extrait de naissance pour l'inscription au CFEE."}];
+S.depenses=[{d:"3 oct.",lib:"Loyer du bâtiment",cat:"Loyer",m:350000},{d:"8 oct.",lib:"Facture Senelec",cat:"Électricité / eau",m:85000},{d:"8 oct.",lib:"Facture SEN'EAU",cat:"Électricité / eau",m:32000},{d:"12 oct.",lib:"Craies, cahiers, registres",cat:"Fournitures",m:47500},{d:"30 oct.",lib:"Gardiennage",cat:"Services",m:60000}];
+S.parentId=S.students.find(s=>!s.items[1].paid).id;
+
+// ---------- Calculs ----------
+const byId=id=>S.students.find(s=>s.id===id);
+const fullName=s=>s.prenom+" "+s.nom;
+const grp=c=>(c==="6e"||c==="5e")?"col":"pri";
+const coefOf=(c,m)=>S.coef[c][m];
+const avg=a=>{const v=a.filter(x=>x!=null&&x!=="");return v.length?v.reduce((p,q)=>p+q,0)/v.length:null};
+const moyDev=(s,m)=>avg(s.notes[m].d);
+function moyMat(s,m){const d=moyDev(s,m),c=s.notes[m].c;if(d==null&&c==null)return null;if(c==null)return d;if(d==null)return c;return(d+c)/2}
+const profOf=(c,m)=>{const i=S.aff[c][m];return i==null?null:S.teachers[i]};
+const classesOf=i=>ALLC.filter(c=>S.aff[c][S.teachers[i].mat]===i);
+const clOf=t=>{const i=S.teachers.indexOf(t),cl=classesOf(i);return t.mat+" · "+(cl.length===ALLC.length?"toutes classes":cl.length?cl.join(", "):"aucune classe")};
+const showN=v=>v==null?"–":dec(v)
+const reste=s=>s.items.filter(i=>i.due&&!i.paid).reduce((a,i)=>a+i.montant,0);
+const nbImp=s=>s.items.filter(i=>i.due&&!i.paid).length;
+function statut(s){const n=nbImp(s);return n===0?["ok","À jour"]:n===1?["warn","1 échéance due"]:["bad",n+" échéances dues"]}
+function moyenne(s){let t=0,c=0;MATIERES.forEach(m=>{const v=moyMat(s,m),k=coefOf(s.classe,m);if(v!=null&&k){t+=v*k;c+=k}});return c?t/c:0}
+function rang(s){const cl=S.students.filter(x=>x.classe===s.classe).sort((a,b)=>moyenne(b)-moyenne(a));return cl.indexOf(s)+1}
+function risque(s){const r=[];let sc=nbImp(s)*35;if(nbImp(s))r.push(nbImp(s)+" échéance(s) impayée(s)");if(s.abs>=3){sc+=s.abs*6;r.push(s.abs+" absences ce mois")}const m=moyenne(s);if(m<10){sc+=20;r.push("moyenne "+dec(m,1)+"/20")}return{sc,r}}
+function appreciation(m){return m>=16?"Excellent trimestre. Élève sérieux et moteur pour la classe. Félicitations.":m>=14?"Très bon travail. Continuez ainsi et visez l'excellence.":m>=12?"Bon trimestre. Des efforts réguliers permettront de progresser encore.":m>=10?"Résultats justes. Il faut plus de travail personnel, surtout dans les matières faibles.":"Trimestre difficile. Un suivi à la maison et un entretien avec les parents sont recommandés."}
+const tot=()=>{const due=S.students.flatMap(s=>s.items.filter(i=>i.due));const paid=due.filter(i=>i.paid).reduce((a,i)=>a+i.montant,0),all=due.reduce((a,i)=>a+i.montant,0);
+  return{paid,all,imp:all-paid,taux:all?paid/all:0,oct:S.pays.filter(p=>p.mois==="oct").reduce((a,p)=>a+p.montant,0),retard:S.students.filter(s=>nbImp(s)).length}};
+const T=()=>S.teachers[S.prof];
+const myClasses=()=>S.role==="prof"?classesOf(S.prof):ALLC;
+const linkOf=t=>"jang.sn/prof/"+t.tok;
+
+// ---------- Messages WhatsApp ----------
+function msgRappel(s,lang){const r=reste(s),lb=s.items.filter(i=>i.due&&!i.paid).map(i=>i.label.toLowerCase()).join(" + ");
+  return lang==="wo"
+  ?`Salaam aleekum ${s.tuteur.nom},\n${SCHOOL} lay bind. Am na ${fmt(r)} yu ñu leen di fey ngir ${fullName(s)} (${s.classe}) : ${lb}.\nMën ngeen fey ci Wave walla Orange Money ci lien bii :\njang.sn/p/${s.id}\nJërëjëf !`
+  :`Bonjour ${s.tuteur.nom},\n${SCHOOL} vous rappelle qu'un montant de ${fmt(r)} reste dû pour ${fullName(s)} (${s.classe}) : ${lb}.\nPayez en 1 clic par Wave ou Orange Money :\njang.sn/p/${s.id}\nMerci !`}
+const bubble=(t,h="10:42")=>`<div class="bubble">${esc(t).replace(/(jang\.sn\/\S+)/g,'<a href="#" onclick="return false">$1</a>')}<span class="t">${h} ✓✓</span></div>`;
+
+// ---------- Rôles et navigation ----------
+const ROLES=()=>[["dir","Directeur · M. Diop"],...S.teachers.map((t,i)=>["prof:"+i,"Prof · "+t.nom+" ("+t.mat+")"]),["compta","Comptable · Mme Sow"],["parent","Parent (optionnel)"]];
+function navItems(){const m=S.mod;
+  if(S.role==="prof")return[["notes","Saisie des notes"],["absences","Faire l'appel"]];
+  if(S.role==="compta")return[["compta","Comptabilité"],m.paiements&&["paiements","Paiements"],m.paie&&["paie","Paie"]].filter(Boolean);
+  if(S.role==="parent")return[["parent","Mon enfant"]];
+  return[["home","Tableau de bord"],["eleves","Élèves"],m.paiements&&["paiements","Paiements"],["notes","Notes & bulletins"],["aff","Affectations & coefficients"],["absences","Absences"],["messages","Messages parents"],m.paie&&["paie","Personnel & paie"],m.compta&&["compta","Comptabilité"],m.parent&&["parent","Appli parent"],["params","Modules & accès"]].filter(Boolean)}
+function nav(){const t=tot(),items=navItems();if(!items.some(i=>i[0]===S.view))S.view=items[0][0];
+  document.getElementById("role").innerHTML=ROLES().map(([k,l])=>`<option value="${k}" ${(S.role==="prof"?"prof:"+S.prof:S.role)===k?"selected":""}>${l}</option>`).join("");
+  document.getElementById("nav").innerHTML=items.map(([k,l])=>`<button data-go="${k}" ${S.view===k?'aria-current="page"':""}>${l}${k==="paiements"&&t.retard?`<span class="pill">${t.retard}</span>`:""}</button>`).join("")}
+function toast(t){document.querySelectorAll(".toast").forEach(x=>x.remove());const el=document.createElement("div");el.className="toast";el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),3200)}
+function closeLayer(){document.getElementById("layer").innerHTML=""}
+function layer(html,center){document.getElementById("layer").innerHTML=`<div class="overlay ${center?"center":""}" data-close="1">${html}</div>`;const f=document.querySelector("#layer .x");f&&f.focus()}
+function render(){nav();document.getElementById("main").innerHTML=V[S.view]();if(S.view==="eleves")fillEleves();if(S.view==="messages")prevMsg();window.scrollTo(0,0)}
+function go(v){S.view=v;render()}
+const roleTag=()=>S.role==="prof"?"Espace enseignant":S.role==="compta"?"Espace comptable":S.role==="parent"?"Espace parent":"Espace direction";
+const head=(t,sub,act="")=>`<div class="top"><div><span class="tag">${roleTag()} · données d'exemple</span><h1>${t}</h1><p>${sub}</p></div><div class="row">${act}</div></div>`;
+const clsSelect=()=>`<select id="cls" aria-label="Classe">${myClasses().map(c=>`<option ${c===S.cls?"selected":""}>${c}</option>`).join("")}</select>`;
+
+// ---------- Vues ----------
+const V={};
+V.home=()=>{
+  if(!S.mod.paiements){const moy=S.students.reduce((a,s)=>a+moyenne(s),0)/S.students.length;
+    return head(SCHOOL,"Module Paiements désactivé · notes, bulletins et absences")+
+    `<div class="kpis"><div class="kpi"><span>Élèves</span><b class="num">${S.students.length}</b><em>8 classes</em></div><div class="kpi"><span>Moyenne de l'école</span><b class="num">${dec(moy)}</b><em>pondérée par coefficients</em></div><div class="kpi"><span>Absences ce mois</span><b class="num">${S.students.reduce((a,s)=>a+s.abs,0)}</b></div><div class="kpi"><span>Bulletins prêts</span><b class="num">${S.students.length}</b><em>1er trimestre</em></div></div>
+    <section class="panel ai"><header><h3>Encaissez vos frais sans effort</h3></header><p>Le module Paiements & relances est inclus dans votre abonnement. Activez-le pour suivre les impayés, envoyer des rappels WhatsApp et encaisser par Wave ou Orange Money.</p><div class="row"><button class="btn pri" data-go="params">Activer dans Modules & accès</button></div></section>`}
+  const t=tot();const days=Array.from({length:TODAY},(_,i)=>S.pays.filter(p=>p.mois==="oct"&&p.day===i+1).reduce((a,p)=>a+p.montant,0));const mx=Math.max(...days,1);
+  const relance=S.students.filter(s=>nbImp(s)).sort((a,b)=>reste(b)-reste(a)).slice(0,6);
+  const risk=S.students.map(s=>({s,...risque(s)})).filter(x=>x.sc>=50).sort((a,b)=>b.sc-a.sc).slice(0,4);
+  const meth=METH.map(m=>[m,S.pays.filter(p=>p.mois==="oct"&&p.meth===m).reduce((a,p)=>a+p.montant,0)]);
+  return head(SCHOOL,"Situation au 31 octobre 2026 · "+S.students.length+" élèves · 8 classes",`<button class="btn wa" data-act="relancerTous">Relancer tous les impayés</button><button class="btn pri" data-act="encaisser">Encaisser un paiement</button>`)+
+  `<div class="kpis">
+    <div class="kpi"><span>Encaissé en octobre</span><b class="num">${fmt(t.oct)}</b><em>${S.pays.filter(p=>p.mois==="oct").length} paiements</em></div>
+    <div class="kpi"><span>Reste à encaisser</span><b class="num" style="color:var(--bad)">${fmt(t.imp)}</b><em>${t.retard} familles en retard</em></div>
+    <div class="kpi"><span>Taux de recouvrement</span><b class="num">${Math.round(t.taux*100)} %</b><em>inscriptions + octobre</em></div>
+    <div class="kpi"><span>Absences ce mois</span><b class="num">${S.students.reduce((a,s)=>a+s.abs,0)}</b><em>saisies par les enseignants</em></div>
+  </div>
+  <div class="grid2">
+    <section class="panel"><header><h2>Encaissements d'octobre, par jour</h2><p>Plus haut : <span class="num">${fmt(mx)}</span></p></header>
+      <div class="bars" role="img" aria-label="Encaissements quotidiens d'octobre">${days.map((v,i)=>`<div class="${i+1===TODAY?"today":""}" style="height:${v/mx*100}%" title="${i+1} oct. : ${fmt(v)}"></div>`).join("")}</div>
+      <div class="axis"><span>1 oct.</span><span>15 oct.</span><span>31 oct.</span></div>
+      <div class="row" style="gap:16px">${meth.map(([m,v])=>`<span class="muted" style="font-size:.85rem">${m} <b class="num" style="color:var(--fg)">${fmt(v)}</b></span>`).join("")}</div>
+    </section>
+    <section class="panel ai"><header><h3>Familles à risque d'impayé</h3><p>Score calculé sur les retards, absences et notes</p></header>
+      <div class="list">${risk.map(x=>`<div class="li"><div><b>${fullName(x.s)}</b> <span class="muted">· ${x.s.classe}</span><small>${x.r.join(" · ")}</small></div><button class="btn sm" data-eleve="${x.s.id}">Voir</button></div>`).join("")||'<p class="empty">Aucune famille à risque.</p>'}</div>
+    </section>
+  </div>
+  <section class="panel"><header><h2>À relancer en priorité</h2><p>Les plus gros montants dus</p></header>
+    <div class="tw"><table><thead><tr><th>Élève</th><th>Classe</th><th>Tuteur</th><th>Statut</th><th class="r">Reste dû</th><th></th></tr></thead><tbody>
+    ${relance.map(s=>{const[c,l]=statut(s);return`<tr><td><b>${fullName(s)}</b></td><td>${s.classe}</td><td>${s.tuteur.nom}<br><span class="muted num" style="font-size:.8rem">${s.tuteur.tel}</span></td><td><span class="st ${c}">${l}</span></td><td class="r num">${fmt(reste(s))}</td><td class="r"><button class="btn sm wa" data-rappel="${s.id}">Rappel WhatsApp</button></td></tr>`}).join("")}
+    </tbody></table></div></section>`};
+
+V.eleves=()=>head("Élèves","Dossiers, familles"+(S.mod.paiements?" et situation financière":""),`<button class="btn pri" data-act="inscrire">Nouvelle inscription</button>`)+
+  `<section class="panel"><div class="row"><input type="search" id="q" placeholder="Rechercher un élève ou un tuteur" style="flex:1;min-width:180px" aria-label="Rechercher"><select id="fc" aria-label="Classe"><option value="">Toutes les classes</option>${ALLC.map(c=>`<option>${c}</option>`).join("")}</select>${S.mod.paiements?'<select id="fs" aria-label="Statut"><option value="">Tous les statuts</option><option value="ok">À jour</option><option value="due">En retard</option></select>':""}</div>
+  <div class="tw"><table><thead><tr><th>Élève</th><th>Classe</th><th>Tuteur</th>${S.mod.parent?"<th>Espace parent</th>":""}${S.mod.paiements?'<th>Statut</th><th class="r">Reste dû</th>':""}<th class="r">Moyenne</th></tr></thead><tbody id="tb"></tbody></table></div></section>`;
+function fillEleves(){const tb=document.getElementById("tb");if(!tb)return;const q=(document.getElementById("q").value||"").toLowerCase(),c=document.getElementById("fc").value,fe=document.getElementById("fs"),f=fe?fe.value:"";
+  const l=S.students.filter(s=>(!c||s.classe===c)&&(!q||(fullName(s)+" "+s.tuteur.nom).toLowerCase().includes(q))&&(!f||(f==="ok"?!nbImp(s):nbImp(s))));
+  tb.innerHTML=l.map(s=>{const[k,t]=statut(s);return`<tr class="click" data-eleve="${s.id}" tabindex="0"><td><b>${fullName(s)}</b></td><td>${s.classe}</td><td>${s.tuteur.nom}</td>${S.mod.parent?`<td>${s.tuteur.appli?'<span class="st ok">Activé</span>':'<span class="st n">WhatsApp seul</span>'}</td>`:""}${S.mod.paiements?`<td><span class="st ${k}">${t}</span></td><td class="r num">${reste(s)?fmt(reste(s)):"–"}</td>`:""}<td class="r num">${dec(moyenne(s))}</td></tr>`}).join("")||`<tr><td colspan="7" class="empty">Aucun élève ne correspond.</td></tr>`}
+
+V.paiements=()=>{const t=tot();const dir=S.role==="dir";return head("Paiements","Journal de caisse, reçus et relances",dir?`<button class="btn wa" data-act="relancerTous">Relancer ${t.retard} familles</button><button class="btn pri" data-act="encaisser">Encaisser</button>`:`<button class="btn pri" data-act="encaisser">Encaisser</button>`)+
+  `<div class="kpis"><div class="kpi"><span>Encaissé (total)</span><b class="num">${fmt(t.paid)}</b></div><div class="kpi"><span>Reste dû</span><b class="num" style="color:var(--bad)">${fmt(t.imp)}</b></div><div class="kpi"><span>Par mobile money</span><b class="num">${Math.round(S.pays.filter(p=>p.meth!=="Espèces").length/S.pays.length*100)} %</b><em>rapprochement automatique</em></div><div class="kpi"><span>Caisse espèces du jour</span><b class="num">${fmt(cashToday())}</b><em>${S.caisseClose?"caisse clôturée":"à clôturer ce soir"}</em></div></div>
+  <section class="panel"><header><h2>Journal des encaissements</h2><p>Chaque reçu est envoyé au parent sur WhatsApp</p></header><div class="tw"><table><thead><tr><th>Reçu</th><th>Date</th><th>Élève</th><th>Objet</th><th>Moyen</th><th class="r">Montant</th></tr></thead><tbody>
+  ${S.pays.slice(0,40).map(p=>{const s=byId(p.sid);return`<tr ${dir?`class="click" data-eleve="${s.id}"`:""}><td class="num">${p.ref}</td><td>${p.day} ${p.mois==="oct"?"oct.":"sept."}</td><td>${fullName(s)} <span class="muted">· ${s.classe}</span></td><td>${p.item}</td><td><span class="st n">${p.meth}</span></td><td class="r num">${fmt(p.montant)}</td></tr>`}).join("")}
+  </tbody></table></div></section>`};
+const cashToday=()=>S.pays.filter(p=>p.mois==="oct"&&p.day===TODAY&&p.meth==="Espèces").reduce((a,p)=>a+p.montant,0);
+
+const FORMULE="Moyenne de la matière = (moyenne des devoirs + note de composition) ÷ 2. Un devoir laissé vide n'est pas compté.";
+V.notes=()=>{const prof=S.role==="prof";
+  if(prof&&!myClasses().length)return head("Saisie des notes",T().nom+" · "+T().mat)+`<div class="note-box">Aucune classe ne vous est encore affectée. La direction doit vous affecter à une classe dans « Affectations & coefficients ».</div>`;
+  if(!myClasses().includes(S.cls))S.cls=myClasses()[0];
+  if(prof||S.mat)return notesDetail(prof?T().mat:S.mat,prof);
+  const l=S.students.filter(s=>s.classe===S.cls),sc=MATIERES.reduce((a,m)=>a+coefOf(S.cls,m),0);
+  return head("Notes & bulletins","Moyennes saisies par les professeurs · pondérées par vos coefficients",clsSelect()+matSelect()+`<button class="btn wa" data-act="envoyerBulletins">Envoyer les bulletins aux parents</button>`)+
+  `<section class="panel"><header><h2>1er trimestre · ${S.cls} · moyennes par matière</h2><div class="row"><span class="st n">Inclus dans l'abonnement</span><button class="btn sm" data-go="aff">Modifier les coefficients</button></div></header><div class="tw"><table><thead><tr><th>Élève</th>${MATIERES.map(m=>{const p=profOf(S.cls,m);return`<th class="r">${m}<br><span style="text-transform:none;letter-spacing:0;font-weight:400">${p?p.nom.replace(/^(M\.|Mme|Oustaz) /,""):"non affecté"}</span></th>`}).join("")}<th class="r">Moyenne</th><th class="r">Rang</th><th></th></tr></thead><tbody>
+  <tr class="coef"><td><b>Coefficient</b> <span class="muted">(total ${sc})</span></td>${MATIERES.map(m=>`<td class="r"><b class="num">${coefOf(S.cls,m)}</b></td>`).join("")}<td></td><td></td><td></td></tr>
+  ${l.map(s=>`<tr><td><b>${fullName(s)}</b></td>${MATIERES.map(m=>`<td class="r num">${showN(moyMat(s,m))}</td>`).join("")}<td class="r num"><b>${dec(moyenne(s))}</b></td><td class="r num">${rang(s)}e</td><td><button class="btn sm" data-bulletin="${s.id}">Bulletin</button></td></tr>`).join("")}
+  </tbody></table></div><p class="muted" style="font-size:.82rem">${FORMULE} Choisissez une matière en haut pour voir le détail des devoirs.</p></section>`};
+const matSelect=()=>`<select id="mat" aria-label="Matière"><option value="">Vue d'ensemble</option>${MATIERES.map(m=>`<option ${S.mat===m?"selected":""}>${m}</option>`).join("")}</select>`;
+function notesDetail(m,edit){const l=S.students.filter(s=>s.classe===S.cls),k=coefOf(S.cls,m),p=profOf(S.cls,m);
+  const sub=edit?`${T().nom} · ${m} · coefficient ${k} en ${S.cls} (fixé par la direction)`:`Professeur : ${p?p.nom:"non affecté"} · coefficient ${k} · lecture seule`;
+  const cell=(s,i)=>{const v=s.notes[m].d[i];return`<td class="r"><input type="number" min="0" max="20" step="0.25" value="${v??""}" placeholder="–" data-dn="${s.id}|${m}|${i}" id="d${i}-${s.id}" aria-label="Devoir ${i+1} ${fullName(s)}" ${edit?"":"disabled"}></td>`};
+  return head(edit?"Saisie des notes":"Notes · "+m,sub,clsSelect()+(edit?"":matSelect()))+
+  `<div class="note-box">${FORMULE}${edit?" Les notes sont enregistrées automatiquement et visibles tout de suite par la direction.":""}</div>
+  <section class="panel notes"><header><h2>${m} · ${S.cls} · 1er trimestre</h2><p>Notes sur 20</p></header><div class="tw"><table><thead><tr><th>Élève</th><th class="r">Devoir 1</th><th class="r">Devoir 2</th><th class="r">Devoir 3</th><th class="r">Moy. devoirs</th><th class="r">Composition</th><th class="r">Moyenne /20</th></tr></thead><tbody>
+  ${l.map(s=>`<tr><td><b>${fullName(s)}</b></td>${[0,1,2].map(i=>cell(s,i)).join("")}<td class="r num" id="md-${s.id}">${showN(moyDev(s,m))}</td><td class="r"><input type="number" min="0" max="20" step="0.25" value="${s.notes[m].c??""}" placeholder="–" data-cn="${s.id}|${m}" id="c-${s.id}" aria-label="Composition ${fullName(s)}" ${edit?"":"disabled"}></td><td class="r num" id="mm-${s.id}"><b>${showN(moyMat(s,m))}</b></td></tr>`).join("")}
+  </tbody></table></div>${edit?`<div class="row"><button class="btn pri" data-act="validerNotes">Valider et transmettre à la direction</button></div>`:""}</section>`}
+
+V.aff=()=>{if(!ALLC.includes(S.cls))S.cls="CM2";const sc=MATIERES.reduce((a,m)=>a+coefOf(S.cls,m),0);
+  return head("Affectations & coefficients","Chaque professeur enseigne une seule matière. Vous l'affectez aux classes et fixez les coefficients.",clsSelect())+
+  `<div class="grid2">
+   <section class="panel"><header><h2>Classe ${S.cls}</h2><p>Total des coefficients : <b class="num">${sc}</b></p></header><div class="tw"><table><thead><tr><th>Matière</th><th class="r">Coefficient</th><th>Professeur</th><th class="r">Moy. classe</th></tr></thead><tbody>
+   ${MATIERES.map((m,i)=>{const cur=S.aff[S.cls][m],ok=S.teachers.map((t,j)=>[t,j]).filter(([t])=>t.mat===m),cl=S.students.filter(s=>s.classe===S.cls),mc=avg(cl.map(s=>moyMat(s,m)));
+     return`<tr><td><b>${m}</b></td><td class="r"><input class="coefin" type="number" min="0" max="10" step="1" value="${coefOf(S.cls,m)}" data-coef="${S.cls}|${m}" id="cf-${i}" aria-label="Coefficient ${m}"></td><td><select data-aff="${S.cls}|${m}" id="af-${i}" aria-label="Professeur de ${m}"><option value="">Non affecté</option>${ok.map(([t,j])=>`<option value="${j}" ${cur===j?"selected":""}>${t.nom}</option>`).join("")}</select></td><td class="r num">${showN(mc)}</td></tr>`}).join("")}
+   </tbody></table></div><p class="muted" style="font-size:.82rem">Seuls les professeurs de la matière apparaissent dans la liste. Un coefficient à 0 retire la matière de la moyenne.</p></section>
+   <section class="panel"><header><h2>Professeurs</h2><p>Une matière par professeur</p></header><div class="list">
+   ${S.teachers.map((t,i)=>`<div class="li"><div style="min-width:0"><b>${t.nom}</b><small>${classesOf(i).length?"Classes : "+classesOf(i).join(", "):"Aucune classe affectée"}</small></div><select data-tmat="${i}" id="tm-${i}" aria-label="Matière de ${t.nom}">${MATIERES.map(m=>`<option ${t.mat===m?"selected":""}>${m}</option>`).join("")}</select></div>`).join("")}
+   </div><p class="muted" style="font-size:.82rem">Changer la matière d'un professeur le retire de ses classes actuelles. Affectez-le ensuite classe par classe.</p></section>
+  </div>`};
+
+V.absences=()=>{if(!myClasses().includes(S.cls))S.cls=myClasses()[0];const l=S.students.filter(s=>s.classe===S.cls);l.forEach(s=>S.appel[s.id]??="P");
+  return head(S.role==="prof"?"Faire l'appel":"Absences",(S.role==="prof"?T().nom+" · ":"")+"Appel du jour · les parents sont prévenus automatiquement",clsSelect())+
+  `<section class="panel"><header><h2>Appel du 31 octobre · ${S.cls}</h2><p>${l.length} élèves</p></header><div class="list">
+  ${l.map(s=>`<div class="li"><div><b>${fullName(s)}</b><small>${s.abs} absence(s) ce mois</small></div><div class="seg" role="group" aria-label="Présence ${fullName(s)}">${[["P","Présent"],["A","Absent"],["R","Retard"]].map(([k,t])=>`<button data-appel="${s.id}|${k}" aria-pressed="${S.appel[s.id]===k}">${t}</button>`).join("")}</div></div>`).join("")}
+  </div><div class="row"><button class="btn pri" data-act="validerAppel">Valider l'appel</button><span class="muted" style="font-size:.85rem">Le parent de chaque élève absent ou en retard reçoit un message WhatsApp (ou SMS s'il n'a pas WhatsApp).</span></div></section>`};
+
+V.messages=()=>head("Messages parents","WhatsApp Business ou SMS · aucun compte parent nécessaire","")+
+  `<div class="grid2"><section class="panel"><h2>Nouveau message</h2>
+    <div class="row"><div class="field" style="flex:1"><label for="dest">Destinataires</label><select id="dest"><option value="">Toute l'école (${S.students.length} familles)</option>${ALLC.map(c=>`<option value="${c}">${c}</option>`).join("")}${S.mod.paiements?'<option value="retard">Familles en retard de paiement</option>':""}</select></div>
+    <div class="field"><span class="lbl">Langue</span><div class="seg" role="group" aria-label="Langue">${[["fr","Français"],["wo","Wolof"]].map(([k,t])=>`<button data-lang="${k}" aria-pressed="${S.lang===k}">${t}</button>`).join("")}</div></div></div>
+    <div class="row">${["Réunion des parents","Fermeture exceptionnelle","Rappel des frais","Sortie scolaire"].map(t=>`<button class="btn sm" data-tpl="${t}">${t}</button>`).join("")}</div>
+    <div class="field"><label for="txt">Message</label><textarea id="txt">Chers parents, la réunion de rentrée aura lieu samedi 7 novembre à 10 h dans la cour de l'école. Votre présence est importante.</textarea></div>
+    <div class="row"><button class="btn wa" data-act="envoyerMsg">Envoyer</button><span class="muted" style="font-size:.85rem" id="cnt"></span></div>
+    <div class="wa-wrap" id="prev"></div></section>
+   <section class="panel"><h2>Historique</h2><div class="list">${S.msgs.map(m=>`<div class="li"><div><b>${m.to}</b> <span class="muted">· ${m.date}</span><small>${esc(m.txt)}</small></div><span class="st ok">${m.lus}/${m.n} lus</span></div>`).join("")}</div></section></div>`;
+
+V.paie=()=>{const total=S.teachers.reduce((a,t)=>a+t.montant,0),rst=S.teachers.filter(t=>!t.paid).reduce((a,t)=>a+t.montant,0);
+  return head(S.role==="compta"?"Paie":"Personnel & paie","Salaires d'octobre · versement par Wave ou Orange Money",`<button class="btn pri" data-act="payerTout" ${rst?"":"disabled"}>Payer tout le monde (${fmt(rst)})</button>`)+
+  `<div class="kpis"><div class="kpi"><span>Masse salariale</span><b class="num">${fmt(total)}</b></div><div class="kpi"><span>Déjà versé</span><b class="num">${fmt(total-rst)}</b></div><div class="kpi"><span>Enseignants</span><b class="num">${S.teachers.length}</b><em>4 permanents · 4 vacataires</em></div><div class="kpi"><span>Couverture</span><b class="num">${Math.round(tot().oct/total*100)} %</b><em>encaissé oct. / salaires</em></div></div>
+  <section class="panel"><div class="tw"><table><thead><tr><th>Nom</th><th>Enseigne</th><th>Contrat</th><th>Calcul</th><th class="r">Montant</th><th></th></tr></thead><tbody>
+  ${S.teachers.map((t,i)=>`<tr><td><b>${t.nom}</b></td><td>${clOf(t)}</td><td>${t.type}</td><td class="muted">${t.detail}</td><td class="r num">${fmt(t.montant)}</td><td class="r">${t.paid?'<span class="st ok">Versé · Wave</span>':`<button class="btn sm" data-payer="${i}">Payer</button>`}</td></tr>`).join("")}
+  </tbody></table></div></section>`};
+
+V.compta=()=>{if(!S.mod.compta)return head("Comptabilité","Module désactivé")+`<div class="note-box">Le module Comptabilité n'est pas activé pour cette école. La direction peut l'activer dans « Modules & accès ».</div>`;
+  const t=tot(),dep=S.depenses.reduce((a,d)=>a+d.m,0),sal=S.teachers.filter(x=>x.paid).reduce((a,x)=>a+x.montant,0),solde=t.oct-dep-sal;
+  const ins=S.pays.filter(p=>p.mois==="oct"&&p.item==="Inscription").reduce((a,p)=>a+p.montant,0);
+  const cats=[...new Set(S.depenses.map(d=>d.cat))].map(c=>[c,S.depenses.filter(d=>d.cat===c).reduce((a,d)=>a+d.m,0)]);
+  const exp=cashToday();
+  return head("Comptabilité","Octobre 2026 · encaissements, dépenses, caisse et exports",`<button class="btn" data-act="export" data-what="Grand livre (Excel)">Exporter Excel</button><button class="btn" data-act="export" data-what="Export SYSCOHADA">Export SYSCOHADA</button><button class="btn pri" data-act="export" data-what="Rapport mensuel PDF">Rapport du mois</button>`)+
+  `<div class="kpis"><div class="kpi"><span>Recettes d'octobre</span><b class="num">${fmt(t.oct)}</b><em>dont inscriptions ${fmt(ins)}</em></div><div class="kpi"><span>Dépenses</span><b class="num">${fmt(dep)}</b><em>${S.depenses.length} pièces</em></div><div class="kpi"><span>Salaires versés</span><b class="num">${fmt(sal)}</b><em>${S.mod.paie?"depuis le module Paie":"saisis à la main"}</em></div><div class="kpi"><span>Résultat du mois</span><b class="num" style="color:var(${solde>=0?"--ok":"--bad"})">${fmt(solde)}</b><em>recettes − dépenses − salaires</em></div></div>
+  <div class="grid2 eq">
+   <section class="panel"><header><h2>Clôture de caisse · 31 oct.</h2>${S.caisseClose?'<span class="st ok">Clôturée</span>':'<span class="st warn">Ouverte</span>'}</header>
+    <div class="li"><span>Espèces enregistrées aujourd'hui</span><b class="num">${fmt(exp)}</b></div>
+    <div class="row"><div class="field" style="flex:1"><label for="cash">Espèces comptées dans la caisse</label><input type="number" id="cash" min="0" step="500" value="${exp}" ${S.caisseClose?"disabled":""}></div><div class="field"><span class="lbl">Écart</span><b class="num" id="ecart">0 F</b></div></div>
+    <button class="btn pri" data-act="cloturer" ${S.caisseClose?"disabled":""}>Clôturer la caisse</button>
+    <p class="muted" style="font-size:.82rem">Chaque encaissement porte le nom du caissier. Un écart est signalé à la direction.</p></section>
+   <section class="panel"><header><h2>Recettes par moyen de paiement</h2></header><div class="list">${METH.map(m=>`<div class="li"><span>${m}</span><b class="num">${fmt(S.pays.filter(p=>p.mois==="oct"&&p.meth===m).reduce((a,p)=>a+p.montant,0))}</b></div>`).join("")}</div>
+    <p class="muted" style="font-size:.82rem">Les paiements Wave, Orange Money et Free Money sont rapprochés automatiquement avec les relevés.</p></section>
+  </div>
+  <section class="panel"><header><h2>Dépenses d'octobre</h2><p>${cats.map(([c,v])=>c+" "+fmt(v)).join(" · ")}</p></header>
+   <form id="fdep" class="row" style="align-items:flex-end"><div class="field" style="flex:2 1 200px"><label for="dl">Libellé</label><input type="text" id="dl" required placeholder="Ex. réparation des tables-bancs"></div><div class="field" style="flex:1 1 150px"><label for="dc">Catégorie</label><select id="dc">${["Fournitures","Électricité / eau","Loyer","Services","Entretien","Autre"].map(c=>`<option>${c}</option>`).join("")}</select></div><div class="field" style="flex:1 1 120px"><label for="dm">Montant (F)</label><input type="number" id="dm" min="0" step="500" required></div><button class="btn pri" type="submit">Ajouter</button></form>
+   <div class="tw"><table><thead><tr><th>Date</th><th>Libellé</th><th>Catégorie</th><th class="r">Montant</th></tr></thead><tbody>${S.depenses.map(d=>`<tr><td>${d.d}</td><td>${esc(d.lib)}</td><td><span class="st n">${d.cat}</span></td><td class="r num">${fmt(d.m)}</td></tr>`).join("")}</tbody><tfoot><tr><td colspan="3">Total</td><td class="r num">${fmt(dep)}</td></tr></tfoot></table></div></section>`};
+
+V.parent=()=>{if(!S.mod.parent)return head("Espace parent","Désactivé pour cette école")+`<div class="note-box">L'espace parent est optionnel et n'est pas activé. Les parents reçoivent quand même les rappels, reçus, absences et bulletins par WhatsApp ou SMS, et peuvent payer par lien ou à la caisse.</div>`;
+  const s=byId(S.parentId),r=reste(s),lp=S.pays.filter(p=>p.sid===s.id);
+  return head(S.role==="parent"?"Mon enfant":"Appli parent","Optionnel : un parent sans application reçoit tout par WhatsApp ou SMS",`<div class="field"><label for="pid">${S.role==="parent"?"Enfant":"Voir en tant que parent de"}</label><select id="pid">${S.students.map(x=>`<option value="${x.id}" ${x.id===s.id?"selected":""}>${fullName(x)} (${x.classe})</option>`).join("")}</select></div>`)+
+  `<div class="phone"><div class="ph"><small>${SCHOOL}</small><h2 style="margin-top:4px">${fullName(s)}</h2><small>${s.classe} · Tuteur : ${s.tuteur.nom}</small></div><div class="pb">
+   ${!S.mod.paiements?"":r?`<div class="due"><span class="muted">Montant dû</span><b class="num">${fmt(r)}</b><span style="font-size:.85rem">${s.items.filter(i=>i.due&&!i.paid).map(i=>i.label).join(" + ")}</span><button class="btn wa" data-act="parentPay">Payer avec Wave</button><button class="btn" data-act="parentPayOM">Payer avec Orange Money</button></div>`
+     :`<div class="due" style="background:var(--ok-soft)"><b style="font-size:1.1rem;color:var(--ok)">Tout est payé</b><span style="font-size:.85rem">Prochaine échéance : Novembre · ${fmt(s.items[2].montant)} avant le 5 novembre</span></div>`}
+   <div><h3>Notes du 1er trimestre</h3><div class="list">${MATIERES.map(m=>`<div class="li"><span>${m} <small>coef. ${coefOf(s.classe,m)} · devoirs ${s.notes[m].d.map(v=>v==null?"–":String(v).replace(".",",")).join(" / ")} · compo ${s.notes[m].c==null?"–":String(s.notes[m].c).replace(".",",")}</small></span><b class="num">${showN(moyMat(s,m))}/20</b></div>`).join("")}</div></div>
+   <div class="row"><span class="st n">Moyenne ${dec(moyenne(s))}</span><span class="st n">Rang ${rang(s)}e / ${S.students.filter(x=>x.classe===s.classe).length}</span><span class="st ${s.abs?"warn":"ok"}">${s.abs} absence(s)</span></div>
+   ${S.mod.paiements?`<div><h3>Reçus</h3>${lp.length?lp.map(p=>`<div class="li"><span>${p.item}<small>${p.ref} · ${p.meth}</small></span><b class="num">${fmt(p.montant)}</b></div>`).join(""):'<p class="empty">Aucun paiement pour l\'instant.</p>'}</div>`:""}
+  </div></div>`};
+
+const MODS=[
+ ["bulletins","Notes, bulletins & absences","Coefficients, moyennes, rangs, bulletins PDF, appel par les enseignants.","Gratuit",true],
+ ["paiements","Paiements & relances","Échéanciers, Wave / Orange Money, reçus et rappels WhatsApp automatiques.","Abonnement",false],
+ ["paie","Personnel & paie","Salaires et vacations, versement par mobile money, bulletins de paie.","Abonnement",false],
+ ["compta","Comptabilité","Dépenses, clôture de caisse, exports Excel et SYSCOHADA, espace comptable.","Abonnement",false],
+ ["parent","Espace parent (optionnel)","Application parent : notes, reçus, paiement. Sans elle, tout passe par WhatsApp / SMS.","Abonnement",false]];
+V.params=()=>head("Modules & accès","Choisissez ce que l'école utilise et qui y a accès")+
+  `<div class="grid2 eq">
+   <section class="panel"><header><h2>Modules</h2><p>Tout est inclus dans l'abonnement de 15 000 F / mois</p></header><div>
+   ${MODS.map(([k,t,d,p,lock])=>`<div class="mod"><div><b>${t}</b> <span class="st ${lock?"ok":"n"}">${lock?"Toujours actif":"Inclus"}</span><small>${d}</small></div><label class="switch"><input type="checkbox" data-mod="${k}" ${S.mod[k]?"checked":""} ${lock?"disabled":""} aria-label="${t}"><span></span></label></div>`).join("")}
+   </div><div class="note-box">Abonnement unique : <b class="num">15 000 F / mois</b>, tous les modules inclus. Activez seulement ce que l'école utilise : le prix ne change pas.</div></section>
+   <section class="panel"><header><h2>Organisation pédagogique</h2></header><p>Chaque professeur enseigne une seule matière. Vous l'affectez aux classes et fixez le coefficient de chaque matière, classe par classe.</p><div class="row"><button class="btn pri" data-go="aff">Ouvrir les affectations</button></div></section>
+  </div>
+  <section class="panel"><header><h2>Accès et liens personnels</h2><p>Chaque personne reçoit son lien par WhatsApp et ne voit que ce qui la concerne</p></header>
+   <div class="tw"><table><thead><tr><th>Personne</th><th>Rôle et droits</th><th>Lien d'accès</th><th></th></tr></thead><tbody>
+   <tr><td><b>M. Diop</b></td><td>Direction · tout</td><td class="muted">Compte principal</td><td></td></tr>
+   <tr><td><b>Mme Sow</b></td><td>Comptable · paiements, paie, comptabilité (pas les notes)</td><td><div class="link"><code>jang.sn/compta/w3Pq5</code></div></td><td class="r"><button class="btn sm" data-copy="jang.sn/compta/w3Pq5">Copier</button></td></tr>
+   ${S.teachers.map(t=>`<tr><td><b>${t.nom}</b></td><td>Enseignant · notes et appel : ${clOf(t)}</td><td><div class="link"><code>${linkOf(t)}</code></div></td><td class="r"><div class="row" style="justify-content:flex-end;gap:6px"><button class="btn sm" data-copy="${linkOf(t)}">Copier</button><button class="btn sm wa" data-sendlink="${t.nom}">Envoyer</button></div></td></tr>`).join("")}
+   </tbody></table></div>
+   <p class="muted" style="font-size:.82rem">Un enseignant ne voit que ses classes et ne peut saisir que ses matières. Il n'a pas accès aux paiements. Un lien peut être désactivé à tout moment.</p></section>`;
+
+// ---------- Fenêtres ----------
+function ficheEleve(id){if(S.role!=="dir")return;const s=byId(id),[k,l]=statut(s),r=reste(s),P=S.mod.paiements;
+  layer(`<div class="drawer" role="dialog" aria-label="Fiche élève"><div class="row" style="justify-content:space-between"><span class="tag">Fiche élève</span><button class="x" data-close="1" aria-label="Fermer">×</button></div>
+  <div><h1>${fullName(s)}</h1><p class="muted" style="margin-top:2px">${s.classe} · Matricule <span class="num">${s.id}</span> · Tuteur ${s.tuteur.nom} · <span class="num">${s.tuteur.tel}</span></p></div>
+  <div class="row">${P?`<span class="st ${k}">${l}</span>`:""}<span class="st n">Moyenne ${dec(moyenne(s))}</span><span class="st n">Rang ${rang(s)}e</span><span class="st ${s.abs>=3?"warn":"n"}">${s.abs} absence(s)</span>${S.mod.parent?`<span class="st ${s.tuteur.appli?"ok":"n"}">${s.tuteur.appli?"Espace parent activé":"Parent : WhatsApp seul"}</span>`:""}</div>
+  ${P?`<section class="panel"><header><h2>Échéancier 2026-2027</h2><p>Reste dû : <b class="num">${fmt(r)}</b></p></header><div class="tw"><table><tbody>
+  ${s.items.map(i=>`<tr><td>${i.label}</td><td class="r num">${fmt(i.montant)}</td><td class="r">${i.paid?'<span class="st ok">Payé</span>':i.due?'<span class="st bad">En retard</span>':'<span class="st n">À venir</span>'}</td></tr>`).join("")}
+  </tbody></table></div><div class="row">${r?`<button class="btn pri" data-act="encaisser" data-sid="${s.id}">Encaisser</button><button class="btn wa" data-rappel="${s.id}">Rappel WhatsApp</button>`:""}</div></section>`:""}
+  <div class="row"><button class="btn" data-bulletin="${s.id}">Voir le bulletin</button></div></div>`)}
+
+function rappel(id){const s=byId(id);let lang=S.lang;
+  const draw=()=>layer(`<div class="modal" role="dialog" aria-label="Rappel WhatsApp"><div class="row" style="justify-content:space-between"><h2>Rappel à ${s.tuteur.nom}</h2><button class="x" data-close="1" aria-label="Fermer">×</button></div>
+  <div class="row"><span class="muted num">${s.tuteur.tel}</span><div class="seg" role="group" aria-label="Langue">${[["fr","Français"],["wo","Wolof"]].map(([k,t])=>`<button data-rlang="${k}" aria-pressed="${lang===k}">${t}</button>`).join("")}</div></div>
+  <div class="wa-wrap">${bubble(msgRappel(s,lang))}</div>${lang==="wo"?'<p class="muted" style="font-size:.82rem">Traduction wolof d\'exemple, à faire valider.</p>':""}
+  <div class="row"><button class="btn wa" data-act="sendRappel" data-sid="${s.id}">Envoyer</button><button class="btn" data-close="1">Annuler</button></div></div>`,true);
+  draw();window._rl=k=>{lang=k;draw()}}
+
+function encaisser(sid){let meth="Wave";const first=S.students.find(s=>nbImp(s));if(!sid&&!first){toast("Toutes les familles sont à jour.");return}let cur=sid||first.id;
+  const draw=()=>{const s=byId(cur),dues=s.items.filter(i=>i.due&&!i.paid);
+   layer(`<div class="modal" role="dialog" aria-label="Encaisser"><div class="row" style="justify-content:space-between"><h2>Encaisser un paiement</h2><button class="x" data-close="1" aria-label="Fermer">×</button></div>
+   <div class="field"><label for="es">Élève</label><select id="es">${S.students.filter(x=>nbImp(x)).map(x=>`<option value="${x.id}" ${x.id===cur?"selected":""}>${fullName(x)} · ${x.classe} · ${fmt(reste(x))}</option>`).join("")}</select></div>
+   <div class="field"><span class="lbl">Échéances</span>${dues.map((i,k)=>`<label style="display:flex;gap:8px;align-items:center;font-size:.95rem"><input type="checkbox" checked data-due="${i.label}" id="d-${k}"> ${i.label} <span class="num muted">${fmt(i.montant)}</span></label>`).join("")}</div>
+   <div class="field"><span class="lbl">Moyen de paiement</span><div class="methods">${METH.map(m=>`<button data-meth="${m}" aria-pressed="${m===meth}">${m}</button>`).join("")}</div></div>
+   <p class="muted" style="font-size:.85rem">${meth==="Espèces"?"Le caissier est enregistré : l'encaissement apparaîtra dans la clôture de caisse.":"Un lien de paiement est envoyé au parent ; le reçu part automatiquement après confirmation."}</p>
+   <div class="row"><button class="btn pri" data-act="valEnc">Valider et envoyer le reçu</button><button class="btn" data-close="1">Annuler</button></div></div>`,true)};
+  draw();window._em=m=>{meth=m;draw()};window._es=v=>{cur=v;draw()};window._ev=()=>{const s=byId(cur),sel=[...document.querySelectorAll("[data-due]")].filter(c=>c.checked).map(c=>c.dataset.due);if(!sel.length){toast("Cochez au moins une échéance.");return}payItems(s,sel,meth);closeLayer();render();toast(`Reçu envoyé à ${s.tuteur.nom} sur WhatsApp.`)}}
+function payItems(s,labels,meth){let sum=0;s.items.forEach(i=>{if(labels.includes(i.label)&&!i.paid){i.paid=true;sum+=i.montant;S.pays.unshift({day:TODAY,mois:"oct",sid:s.id,item:i.label,montant:i.montant,meth,ref:"RC-"+(refN++)})}});return sum}
+
+function bulletin(id){const s=byId(id),m=moyenne(s),sc=MATIERES.reduce((a,x)=>a+(moyMat(s,x)!=null?coefOf(s.classe,x):0),0),pts=MATIERES.reduce((a,x)=>a+(moyMat(s,x)??0)*coefOf(s.classe,x),0);
+  layer(`<div class="modal" role="dialog" aria-label="Bulletin"><div class="row" style="justify-content:space-between"><div class="row"><span class="tag">Aperçu PDF</span></div><button class="x" data-close="1" aria-label="Fermer">×</button></div>
+  <div class="bul"><div class="hd"><div><b>${SCHOOL}</b><br><span class="muted" style="font-size:.85rem">Année scolaire 2026-2027 · 1er trimestre</span></div><div style="text-align:right"><b>${fullName(s)}</b><br><span class="muted" style="font-size:.85rem">${s.classe} · ${s.id}</span></div></div>
+  <div class="tw"><table><thead><tr><th>Matière</th><th>Professeur</th><th class="r">Moy. devoirs</th><th class="r">Compo.</th><th class="r">Moy. /20</th><th class="r">Coef.</th><th class="r">Moy. × coef.</th></tr></thead><tbody>${MATIERES.map(x=>{const v=moyMat(s,x),p=profOf(s.classe,x);return`<tr><td>${x}</td><td class="muted" style="font-size:.82rem">${p?p.nom:"–"}</td><td class="r num">${showN(moyDev(s,x))}</td><td class="r num">${s.notes[x].c==null?"–":dec(s.notes[x].c)}</td><td class="r num"><b>${showN(v)}</b></td><td class="r num">${coefOf(s.classe,x)}</td><td class="r num">${v==null?"–":dec(v*coefOf(s.classe,x))}</td></tr>`}).join("")}</tbody>
+  <tfoot><tr><td colspan="5">Total</td><td class="r num">${sc}</td><td class="r num">${dec(pts)}</td></tr></tfoot></table></div>
+  <div class="row" style="justify-content:space-between"><b>Moyenne : <span class="num">${dec(m)}/20</span></b><b>Rang : ${rang(s)}e / ${S.students.filter(x=>x.classe===s.classe).length}</b><span>Absences : ${s.abs}</span></div>
+  <div class="panel ai" style="padding:10px"><h3>Appréciation proposée</h3><p>${appreciation(m)}</p></div></div>
+  <div class="row"><button class="btn wa" data-act="sendBul" data-sid="${s.id}">Envoyer au parent</button><button class="btn" data-close="1">Fermer</button></div></div>`,true)}
+
+function relancerTous(){const l=S.students.filter(s=>nbImp(s));if(!l.length){toast("Toutes les familles sont à jour.");return}const s=l[0];
+  layer(`<div class="modal" role="dialog" aria-label="Relance groupée"><div class="row" style="justify-content:space-between"><h2>Relancer ${l.length} familles</h2><button class="x" data-close="1" aria-label="Fermer">×</button></div>
+  <p>Chaque parent reçoit un message personnalisé avec son montant et son lien de paiement. Total concerné : <b class="num">${fmt(l.reduce((a,x)=>a+reste(x),0))}</b>.</p>
+  <div class="field"><span class="lbl">Exemple de message</span><div class="wa-wrap">${bubble(msgRappel(s,"fr"))}</div></div>
+  <p class="muted" style="font-size:.85rem">Relances automatiques prévues : J+1, J+7 puis J+15. Les familles qui ont un plan de paiement ne sont pas relancées.</p>
+  <div class="row"><button class="btn wa" data-act="sendAll">Envoyer les ${l.length} rappels</button><button class="btn" data-close="1">Annuler</button></div></div>`,true)}
+
+function inscrire(){layer(`<div class="modal" role="dialog" aria-label="Nouvelle inscription"><div class="row" style="justify-content:space-between"><h2>Nouvelle inscription</h2><button class="x" data-close="1" aria-label="Fermer">×</button></div>
+  <form id="fi" class="row" style="align-items:stretch">
+   <div class="field" style="flex:1 1 200px"><label for="ip">Prénom</label><input type="text" id="ip" required value="Mame Diarra"></div>
+   <div class="field" style="flex:1 1 200px"><label for="in">Nom</label><input type="text" id="in" required value="Ndiaye"></div>
+   <div class="field" style="flex:1 1 120px"><label for="ic">Classe</label><select id="ic">${ALLC.map(c=>`<option>${c}</option>`).join("")}</select></div>
+   <div class="field" style="flex:1 1 200px"><label for="it">Tuteur</label><input type="text" id="it" required value="Aliou Ndiaye"></div>
+   <div class="field" style="flex:1 1 160px"><label for="itel">Téléphone (WhatsApp ou SMS)</label><input type="text" id="itel" required value="77 512 34 56"></div>
+   ${S.mod.parent?`<label style="flex-basis:100%;display:flex;gap:8px;align-items:center"><input type="checkbox" id="iapp"> Le parent veut l'espace parent (facultatif)</label>`:""}
+   <div class="row" style="flex-basis:100%"><button class="btn pri" type="submit">Inscrire${S.mod.paiements?" et envoyer le lien de paiement":""}</button></div>
+  </form></div>`,true);
+  document.getElementById("fi").addEventListener("submit",e=>{e.preventDefault();const c=CLASSES.find(x=>x.id===document.getElementById("ic").value),nom=document.getElementById("in").value.trim(),ap=document.getElementById("iapp");
+   const items=[{label:"Inscription",montant:c.ins,due:true,paid:false}];MOIS.forEach((m,i)=>items.push({label:m,montant:c.fee,due:i===0,paid:false}));
+   const st={id:"E"+(200+S.students.length),prenom:document.getElementById("ip").value.trim(),nom,sexe:"F",classe:c.id,tuteur:{nom:document.getElementById("it").value.trim(),tel:document.getElementById("itel").value.trim(),appli:!!(ap&&ap.checked)},items,abs:0,notes:{}};
+   MATIERES.forEach(m=>st.notes[m]={d:[null,null,null],c:null});S.students.push(st);closeLayer();render();toast(`${fullName(st)} inscrit(e) en ${c.id}.`+(S.mod.paiements?` Lien de paiement envoyé (${fmt(c.ins+c.fee)}).`:""))})}
+
+function parentPay(meth){const s=byId(S.parentId),r=reste(s);layer(`<div class="modal" role="dialog" aria-label="Paiement" style="width:min(380px,100%)"><h2>${meth}</h2><p>Payer <b class="num">${fmt(r)}</b> à ${SCHOOL} pour ${fullName(s)} ?</p><p class="muted" style="font-size:.85rem">Simulation : aucun argent n'est débité.</p><div class="row"><button class="btn pri" id="okpay">Confirmer le paiement</button><button class="btn" data-close="1">Annuler</button></div></div>`,true);
+  document.getElementById("okpay").onclick=()=>{payItems(s,s.items.filter(i=>i.due&&!i.paid).map(i=>i.label),meth);closeLayer();render();toast("Paiement reçu. Le reçu est disponible et l'école est notifiée.")}}
+
+// ---------- Événements ----------
+function recalcNotes(){S.students.filter(s=>s.classe===S.cls).forEach(s=>{const a=document.getElementById("moy-"+s.id),b=document.getElementById("rg-"+s.id);if(a)a.textContent=dec(moyenne(s));if(b)b.textContent=rang(s)+"e"})}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-go],[data-eleve],[data-act],[data-rappel],[data-bulletin],[data-appel],[data-lang],[data-rlang],[data-meth],[data-tpl],[data-payer],[data-copy],[data-sendlink],[data-close]");if(!t)return;const d=t.dataset;
+  if(d.close!==undefined){if(t===e.target||t.classList.contains("x")||t.tagName==="BUTTON")closeLayer();return}
+  if(d.go)return go(d.go);
+  if(d.eleve)return ficheEleve(d.eleve);
+  if(d.rappel)return rappel(d.rappel);
+  if(d.bulletin)return bulletin(d.bulletin);
+  if(d.rlang)return window._rl(d.rlang);
+  if(d.meth)return window._em(d.meth);
+  if(d.copy){const v=d.copy;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast("Lien copié : "+v),()=>toast("Copie impossible ici. Sélectionnez le lien à la main."));return}
+  if(d.sendlink)return toast(`Lien envoyé à ${d.sendlink} sur WhatsApp.`);
+  if(d.appel){const[id,k]=d.appel.split("|");S.appel[id]=k;t.parentNode.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b===t));return}
+  if(d.lang){S.lang=d.lang;document.querySelectorAll("[data-lang]").forEach(b=>b.setAttribute("aria-pressed",b===t));prevMsg();return}
+  if(d.tpl){const TP={"Réunion des parents":"Chers parents, la réunion de rentrée aura lieu samedi 7 novembre à 10 h dans la cour de l'école. Votre présence est importante.","Fermeture exceptionnelle":"Chers parents, l'école sera fermée le lundi 9 novembre. Les cours reprennent le mardi 10 novembre à 8 h.","Rappel des frais":"Chers parents, la mensualité de novembre est attendue avant le 5 novembre. Vous pouvez payer par Wave ou Orange Money depuis le lien reçu, ou à la caisse.","Sortie scolaire":"Chers parents, une sortie à l'île de Gorée est prévue le 20 novembre. Participation : 5 000 F. Merci de confirmer avant le 13 novembre."};document.getElementById("txt").value=TP[d.tpl];prevMsg();return}
+  if(d.payer!==undefined){const x=S.teachers[+d.payer];x.paid=true;render();toast(`${fmt(x.montant)} versés à ${x.nom} par Wave.`);return}
+  const A={
+   relancerTous,encaisser:()=>{closeLayer();encaisser(d.sid)},inscrire,valEnc:()=>window._ev(),
+   sendRappel:()=>{const s=byId(d.sid);closeLayer();toast(`Rappel envoyé à ${s.tuteur.nom} (${s.tuteur.tel}).`)},
+   sendAll:()=>{const n=S.students.filter(s=>nbImp(s)).length;closeLayer();toast(`${n} rappels envoyés sur WhatsApp.`)},
+   sendBul:()=>{const s=byId(d.sid);closeLayer();toast(`Bulletin de ${fullName(s)} envoyé à ${s.tuteur.nom} ${s.tuteur.appli&&S.mod.parent?"dans l'espace parent":"par WhatsApp (PDF)"}.`)},
+   validerNotes:()=>toast(`Notes de ${T().mat} en ${S.cls} transmises à la direction.`),
+   envoyerBulletins:()=>toast(`${S.students.filter(s=>s.classe===S.cls).length} bulletins de ${S.cls} envoyés aux parents en PDF.`),
+   validerAppel:()=>{const l=S.students.filter(s=>s.classe===S.cls),abs=l.filter(s=>S.appel[s.id]!=="P");abs.forEach(s=>{if(S.appel[s.id]==="A")s.abs++;});l.forEach(s=>delete S.appel[s.id]);render();toast(abs.length?`Appel validé. ${abs.length} parent(s) prévenu(s). La direction voit l'appel.`:"Appel validé. Tous les élèves sont présents.")},
+   envoyerMsg:()=>{const v=document.getElementById("dest").value,txt=document.getElementById("txt").value.trim();if(!txt){toast("Écrivez un message avant d'envoyer.");return}const n=destCount(v);S.msgs.unshift({date:"31 oct.",to:v===""?"Toute l'école":v==="retard"?"Familles en retard":v,n,lus:0,txt});render();toast(`Message envoyé à ${n} familles.`)},
+   payerTout:()=>{const n=S.teachers.filter(t=>!t.paid);n.forEach(t=>t.paid=true);render();toast(`Salaires versés à ${n.length} enseignants.`)},
+   cloturer:()=>{const c=parseFloat(document.getElementById("cash").value)||0,ec=c-cashToday();S.caisseClose=true;render();toast(ec===0?"Caisse clôturée sans écart.":`Caisse clôturée avec un écart de ${fmt(ec)}. La direction est prévenue.`)},
+   export:()=>toast(`${d.what} : fichier généré (simulation du prototype).`),
+   parentPay:()=>parentPay("Wave"),parentPayOM:()=>parentPay("Orange Money")};
+  A[d.act]&&A[d.act]()});
+const destCount=v=>v===""?S.students.length:v==="retard"?S.students.filter(s=>nbImp(s)).length:S.students.filter(s=>s.classe===v).length;
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLayer();if(e.key==="Enter"&&e.target.matches("tr[data-eleve]"))ficheEleve(e.target.dataset.eleve)});
+document.addEventListener("input",e=>{const t=e.target;
+  if(t.id==="q")fillEleves();
+  if(t.id==="txt")prevMsg();
+  if(t.id==="cash"){const el=document.getElementById("ecart"),ec=(parseFloat(t.value)||0)-cashToday();el.textContent=fmt(ec);el.style.color=ec===0?"":"var(--bad)"}
+  if(t.dataset.dn||t.dataset.cn){const[id,m,i]=(t.dataset.dn||t.dataset.cn).split("|"),s=byId(id),v=t.value===""?null:Math.max(0,Math.min(20,parseFloat(t.value)));
+    if(t.dataset.dn)s.notes[m].d[+i]=isNaN(v)?null:v;else s.notes[m].c=isNaN(v)?null:v;
+    document.getElementById("md-"+id).textContent=showN(moyDev(s,m));document.getElementById("mm-"+id).innerHTML="<b>"+showN(moyMat(s,m))+"</b>"}
+  if(t.dataset.coef){const[c,m]=t.dataset.coef.split("|");S.coef[c][m]=Math.max(0,Math.min(10,parseInt(t.value)||0))}});
+document.addEventListener("change",e=>{const t=e.target;
+  if(t.id==="role"){const v=t.value;if(v.startsWith("prof:")){S.role="prof";S.prof=+v.split(":")[1];S.cls=myClasses()[0]||S.cls}else{S.role=v;S.mat=""}S.view=navItems()[0][0];render();toast("Vous voyez maintenant l'"+roleTag().toLowerCase()+".");return}
+  if(t.dataset.mod){S.mod[t.dataset.mod]=t.checked;render();go("params");return}
+  if(t.dataset.coef){render();toast(`Coefficient de ${t.dataset.coef.split("|")[1]} en ${t.dataset.coef.split("|")[0]} : ${t.value}.`);return}
+  if(t.dataset.aff){const[c,m]=t.dataset.aff.split("|");if(t.value==="")delete S.aff[c][m];else S.aff[c][m]=+t.value;render();toast(t.value===""?`${m} en ${c} : aucun professeur.`:`${S.teachers[+t.value].nom} enseigne ${m} en ${c}. Son lien lui donne accès à cette classe.`);return}
+  if(t.dataset.tmat){const i=+t.dataset.tmat,old=S.teachers[i].mat;ALLC.forEach(c=>{if(S.aff[c][old]===i)delete S.aff[c][old]});S.teachers[i].mat=t.value;render();toast(`${S.teachers[i].nom} enseigne maintenant ${t.value}. Affectez-le à ses classes.`);return}
+  if(t.id==="mat"){S.mat=t.value;render();return}
+  if(t.id==="fc"||t.id==="fs")fillEleves();
+  if(t.id==="cls"){S.cls=t.value;render()}
+  if(t.id==="pid"){S.parentId=t.value;render()}
+  if(t.id==="es")window._es(t.value);
+  if(t.id==="dest")prevMsg()});
+document.addEventListener("submit",e=>{if(e.target.id!=="fdep")return;e.preventDefault();const m=parseFloat(document.getElementById("dm").value)||0,l=document.getElementById("dl").value.trim();if(!l||!m)return;S.depenses.push({d:"31 oct.",lib:l,cat:document.getElementById("dc").value,m});render();toast(`Dépense ajoutée : ${fmt(m)}.`)});
+function prevMsg(){const p=document.getElementById("prev");if(!p)return;const n=destCount(document.getElementById("dest").value);
+  p.innerHTML=bubble(document.getElementById("txt").value||"…")+(S.lang==="wo"?'<p class="muted" style="font-size:.8rem">En wolof, le message peut partir en vocal enregistré ou être traduit automatiquement (à valider).</p>':"");document.getElementById("cnt").textContent=n+" familles · WhatsApp, ou SMS pour celles qui n'ont pas WhatsApp."}
+render();
+</script>
+</body>
+</html>
